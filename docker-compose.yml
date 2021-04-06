@@ -1,0 +1,47 @@
+version: "3"
+services:
+  db:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      - MYSQL_BATABASE=blog # 数据库名称
+      - MYSQL_ROOT_PASSWORD=zzxxyy # 数据库密码
+      - MYSQL_USER=xiaolou
+      - MYSQL_PASSWORD=zzxxyy
+    volumes:
+      - ./deployment/mysql/data:/var/lib/mysql #挂载数据库数据
+      - ./deployment/mysql/conf/my.cnf:/etc/mysql/my.cnf #关在配置文件
+      - ./deployment/mysql/init:/chat-entrypoint-initdb.d/ #挂载数据初始化sql脚本
+    ports:
+      - "3306:3306"
+    restart: always
+
+  web:
+    build: .
+    expose:
+      - "8000"
+    volumes:
+      - .:/project
+      - /tmp/logs:/tmp
+    command: bash start.sh
+    links:
+      - db
+    depends_on:
+      - db
+    restart: always
+
+  nginx:
+    build: deployment/nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./static:/usr/share/nginx/html/static #挂载静态文件
+      - ./media:/usr/share/nginx/html/media #上传文件
+      - ./deployment/nginx/ssl:/usr/share/nginx/ssl # 挂载ssl证书目录
+      - ./dist:/usr/share/nginx/html/ 
+    links:
+      - web
+    depends_on:
+      - web
+    restart: always

@@ -9,7 +9,8 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+import datetime
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +26,7 @@ SECRET_KEY = '_h6=8h()p64!@n8+olhyui*9q4e2mlb8nsck4m1+my^+zz#39e'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*", ]
 
 
 # Application definition
@@ -37,17 +38,34 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'apis.users',
+    'rest_framework',
+    'drf_yasg',
+    'corsheaders',
+    'django_filters',
+    'apis.data',
+    'apis.utils',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # 注意顺序，必须放在这儿
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True
+# 允许所有的请求头
+CORS_ALLOW_HEADERS = ('*',)
+# 允许所有方法
+CORS_ALLOW_METHODS = ('*',)
+
+AUTH_USER_MODEL = 'users.UserProfile'
 
 ROOT_URLCONF = 'name.urls'
 
@@ -74,13 +92,21 @@ WSGI_APPLICATION = 'name.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+
+# 数据库相关
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'name',
+        'USER': 'root',
+        'PASSWORD': '123456',
+        'HOST': '127.0.0.1',
+        'PORT': 3306,
+        'OPTIONS': {'charset': 'utf8mb4',
+                    # 'init_command': 'SET storage_engine=INNODB;'
+                    }
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -104,18 +130,72 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'zh-hans'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# 媒体文件路径
+MEDIA_URL = "/media/"
+
+# 媒体文件根路径
+MEDIA_ROOT = os.path.join(BASE_DIR, "static/../media")
+
+MEDIAFILES_DIRS = (
+    os.path.join(BASE_DIR, "static/../media"),
+)
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+    ),
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    'ALLOWED_VERSIONS': ['v1', 'v2'],
+    # 版本使用的参数名称
+    'VERSION_PARAM': 'version',
+    # 默认使用的版本
+    'DEFAULT_VERSION': 'v1',
+    # 分页设置
+    'DEFAULT_PAGINATION_CLASS': 'apis.utils.pagination.MyPageNumberPagination',
+    'PAGE_SIZE': 10,
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+}
+
+# JWT 配置
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),  # 生成的token有效期
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'apis.users.utils.jwt_response_payload_handler',  # response中token的payload部分处理函数
+    'JWT_SECRET_KEY': 'test123412341234',
+}
+
+# 手机号正则表达式
+REGEX_MOBILE = r"^1[354789]\d{9}$|^147\d{8}$|^176\d{8}$"
+
+USE_X_FORWARDED_HOST = True
+
+# 百度AI
+BAIDUKEY = '0kiXrFnYRNLpiusp6ZBrIhv3'
+BAIDUSECRET = 'x49eAluIgH4zKEYkdGnWVuMh05z2OTK1'
