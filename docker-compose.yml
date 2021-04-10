@@ -2,7 +2,7 @@ version: "3"
 services:
   db:
     image: mysql:5.7
-    container_name: mysql
+    container_name: mysql1
     environment:
       - MYSQL_BATABASE=blog # 数据库名称
       - MYSQL_ROOT_PASSWORD=zzxxyy # 数据库密码
@@ -32,6 +32,7 @@ services:
 
   nginx:
     build: deployment/nginx
+    container_name: nginx1
     ports:
       - 80:80
       - 443:443

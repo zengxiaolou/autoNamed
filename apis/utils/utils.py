@@ -80,5 +80,6 @@ class JsonModel(BaseModel):
 
 
 if __name__ == '__main__':
-    get_word_explain('淼的拼音')
+    access_token = get_baidu_access_token()
+    get_word_explain(access_token, '荆吴相接水为乡，君去春江正淼茫的出处')
 
